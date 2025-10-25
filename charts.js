@@ -117,8 +117,8 @@ const renderAllCharts = (forceRender = false) => {
             const themeColors = getThemeColors();
             console.log('Theme colors for charts:', themeColors);
 
-            const trades = Array.isArray(window.appState.trades) ? window.appState.trades : [];
-            const ledger = Array.isArray(window.appState.ledger) ? window.appState.ledger : [];
+            const trades = Array.isArray(window.appState?.trades) ? window.appState.trades : [];
+            const ledger = Array.isArray(window.appState?.ledger) ? window.appState.ledger : [];
             
             // Performance optimization: Cache filtered trades
             const closedTrades = trades.filter(t => t.exit_date && t.exit_price);
@@ -554,7 +554,7 @@ const renderAllCharts = (forceRender = false) => {
 
             // Render Challenge Progress Chart
             const progressCtx = document.getElementById('challenge-progress-chart');
-            if (progressCtx && window.appState.challenge) {
+            if (progressCtx && window.appState?.challenge) {
                 const challenge = window.appState.challenge;
                 const currentCapital = challenge.startingCapital + (equityData[equityData.length - 1] || 0);
                 const progressPercent = Math.min((currentCapital / challenge.targetCapital) * 100, 100);

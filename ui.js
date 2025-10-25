@@ -21,11 +21,14 @@ const renderDashboard = async () => {
         
         // Ensure we have latest data
         if (window.dataStore) {
+            if (!window.appState) {
+                window.appState = {};
+            }
             window.appState.trades = await window.dataStore.getTrades();
             window.appState.ledger = await window.dataStore.getLedger();
         }
         
-        const { trades, ledger } = window.appState;
+        const { trades, ledger } = window.appState || { trades: [], ledger: [] };
         const closedTrades = trades.filter(t => t.exit_price && t.exit_date);
         let netPnl = 0, grossProfit = 0, grossLoss = 0, totalNetProfit = 0, totalNetLoss = 0, wins = 0, losses = 0;
             
@@ -115,10 +118,13 @@ const renderTradeHistory = async (skipDelay = false, filters = {}) => {
         if (tradeHistoryRendering && !skipDelay) return;
         tradeHistoryRendering = true;
         
-        let trades = window.appState.trades;
+        let trades = window.appState?.trades;
         if (!trades || trades.length === 0) {
             if (window.dataStore) {
                 trades = await window.dataStore.getTrades();
+                if (!window.appState) {
+                    window.appState = {};
+                }
                 window.appState.trades = trades;
             }
         }
@@ -234,7 +240,7 @@ const renderCalendar = () => {
     
     calendarRenderTimeout = setTimeout(() => {
         try {
-            console.log('renderCalendar called - trades count:', window.appState.trades?.length || 0);
+            console.log('renderCalendar called - trades count:', window.appState?.trades?.length || 0);
             const monthYearEl = document.getElementById('calendar-month-year');
             const daysContainer = document.getElementById('calendar-grid-days');
             const weeklySummaries = document.getElementById('calendar-grid-summaries');
@@ -249,7 +255,7 @@ const renderCalendar = () => {
             monthYearEl.textContent = `${new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
             
             // Get trades for the current month
-            const trades = window.appState.trades || [];
+            const trades = window.appState?.trades || [];
             const monthTrades = trades.filter(trade => {
                 if (!trade.exit_date) return false;
                 const tradeDate = new Date(trade.exit_date);
@@ -342,7 +348,7 @@ const renderReports = () => {
     
     reportsRenderTimeout = setTimeout(() => {
         try {
-            console.log('renderReports called - trades count:', window.appState.trades?.length || 0);
+            console.log('renderReports called - trades count:', window.appState?.trades?.length || 0);
             // Render original Performance Metrics
             const container = document.getElementById('reports-metrics-grid');
             if (!container) {
@@ -350,7 +356,7 @@ const renderReports = () => {
                 return;
             }
             
-            const trades = window.appState.trades || [];
+            const trades = window.appState?.trades || [];
             const closedTrades = trades.filter(t => t.exit_price && t.exit_date);
             
             // Calculate metrics
@@ -420,15 +426,15 @@ const renderStatement = (filters = {}, skipDelay = false) => {
     
     if (skipDelay) {
         try {
-            console.log('renderStatement called (skipDelay) - trades count:', window.appState.trades?.length || 0, 'ledger count:', window.appState.ledger?.length || 0);
+            console.log('renderStatement called (skipDelay) - trades count:', window.appState?.trades?.length || 0, 'ledger count:', window.appState?.ledger?.length || 0);
             const statementBody = document.getElementById('statement-tbody');
             if (!statementBody) {
                 console.log('Statement body not found');
                 return;
             }
             
-            const trades = window.appState.trades || [];
-            const ledger = window.appState.ledger || [];
+            const trades = window.appState?.trades || [];
+            const ledger = window.appState?.ledger || [];
             
             // Render immediately for theme changes
             renderStatementContent(trades, ledger, statementBody, filters);
@@ -443,7 +449,7 @@ const renderStatement = (filters = {}, skipDelay = false) => {
             if (statementRendering) return;
             statementRendering = true;
             
-            console.log('renderStatement called - trades count:', window.appState.trades?.length || 0, 'ledger count:', window.appState.ledger?.length || 0);
+            console.log('renderStatement called - trades count:', window.appState?.trades?.length || 0, 'ledger count:', window.appState?.ledger?.length || 0);
             const statementBody = document.getElementById('statement-tbody');
             if (!statementBody) {
                 console.log('Statement body not found');
@@ -451,8 +457,8 @@ const renderStatement = (filters = {}, skipDelay = false) => {
                 return;
             }
             
-            const trades = window.appState.trades || [];
-            const ledger = window.appState.ledger || [];
+            const trades = window.appState?.trades || [];
+            const ledger = window.appState?.ledger || [];
             
             if (trades.length === 0 && ledger.length === 0) {
                 statementBody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500">No data available</td></tr>';
@@ -549,16 +555,19 @@ const renderFundManagement = async () => {
     try {
         // Load ledger
         if (window.dataStore) {
+            if (!window.appState) {
+                window.appState = {};
+            }
             window.appState.ledger = await window.dataStore.getLedger();
         }
-        console.log('renderFundManagement: ledger data:', window.appState.ledger);
+        console.log('renderFundManagement: ledger data:', window.appState?.ledger);
 
         // Calculate all financial metrics with validation
-        const deposits = window.appState.ledger
+        const deposits = (window.appState?.ledger || [])
             .filter(l => l.type === 'Deposit')
             .reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
         
-        const withdrawals = window.appState.ledger
+        const withdrawals = (window.appState?.ledger || [])
             .filter(l => l.type === 'Withdrawal')
             .reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
         
@@ -616,7 +625,7 @@ const renderChallenge = async () => {
     isRendering = true;
     
     try {
-        const challenge = window.appState.challenge;
+        const challenge = window.appState?.challenge;
         if (!challenge) {
             // Show challenge creation form
             const container = document.getElementById('challenge-container');
@@ -668,7 +677,7 @@ const renderAIAnalyst = async () => {
     
     aiAnalystRenderTimeout = setTimeout(() => {
         try {
-            console.log('renderAIAnalyst called - trades count:', window.appState.trades?.length || 0);
+            console.log('renderAIAnalyst called - trades count:', window.appState?.trades?.length || 0);
             
             const container = document.getElementById('ai-analyst-content');
             if (!container) {
@@ -676,7 +685,7 @@ const renderAIAnalyst = async () => {
                 return;
             }
             
-            const trades = window.appState.trades || [];
+            const trades = window.appState?.trades || [];
             const closedTrades = trades.filter(t => t.exit_price && t.exit_date);
             
             if (closedTrades.length === 0) {
@@ -724,7 +733,7 @@ const renderAIAnalyst = async () => {
 // Helper functions for dashboard
 const renderDashboardTopWinners = () => {
     try {
-        const trades = window.appState.trades || [];
+        const trades = window.appState?.trades || [];
         const closedTrades = trades.filter(t => t.exit_price && t.exit_date);
         
         // Filter winners (positive P&L) and sort by P&L (best first)
@@ -755,7 +764,7 @@ const renderDashboardTopWinners = () => {
 
 const renderDashboardTopLosers = () => {
     try {
-        const trades = window.appState.trades || [];
+        const trades = window.appState?.trades || [];
         const closedTrades = trades.filter(t => t.exit_price && t.exit_date);
         
         // Filter losers (negative P&L) and sort by P&L (worst first)
